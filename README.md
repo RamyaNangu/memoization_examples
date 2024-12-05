@@ -1,70 +1,73 @@
-# Getting Started with Create React App
+# React.memo
+Purpose: React.memo is a higher-order component (HOC) that prevents re-renders of a functional component if its props do not change.
+In the code:
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+const CounterControlls = memo(({onIncrement,onDecrement}) => {
+    console.log("CounterControls re-rendered");
+    return(
+        <div>
+            <button onClick={onIncrement}>Increment</button>
+            <br />
+            <button onClick={onDecrement}>Decrement</button>
+        </div>
+    )
+})
+CounterControlls is wrapped with memo.
+This ensures that CounterControlls only re-renders when its props (onIncrement or onDecrement) change.
 
-## Available Scripts
+2. React.useCallback
+Purpose: useCallback memoizes callback functions, ensuring that the same function reference is passed unless its dependencies change.
+In the code:
+javascript
+Copy code
+const increment = useCallback(() => {
+    setCount(prevCount => prevCount + 1)
+}, [])
 
-In the project directory, you can run:
+const decrement = useCallback(() => {
+    setCount(prevCount => prevCount - 1)
+}, [])
+These callbacks (increment and decrement) are memoized.
+The empty dependency array [] ensures that these functions are created once and retain the same reference across renders.
+Why use memo and useCallback together?
+Without memoization:
 
-### `npm start`
+Every time the Counter component renders (e.g., due to state updates like name), new instances of increment and decrement would be created.
+These new references would cause CounterControlls to re-render because React sees the props as "changed."
+With memoization:
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+useCallback ensures that increment and decrement have stable references, avoiding unnecessary updates to props passed to CounterControlls.
+React.memo prevents CounterControlls from re-rendering if the props (stable references) do not change.
+Summary of Memoization Technique
+Problem: React components re-render whenever their parent component updates, even if their props haven't changed.
+Solution:
+Use React.memo to avoid re-rendering functional components unless props change.
+Use useCallback to ensure stable function references, preventing React from incorrectly perceiving props as changed.
+In Action:
+Here, CounterControlls will only re-render if onIncrement or onDecrement change, optimizing performance.
+Log Output
+When typing into the input field (updating name state):
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+Without memoization: "CounterControls re-rendered" would log repeatedly.
+With memoization: "CounterControls re-rendered" does not log, proving the optimization.
 
-### `npm test`
+# What is useMemo?
+    • useMemo is a React hook used to memoize the result of a function. It helps optimize performance by avoiding recalculations of expensive operations unless their dependencies change.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+Syntax
 
-### `npm run build`
+javascript
+Copy code
+const memoizedValue = useMemo(() => computeExpensiveValue(a, b), [a, b]);
+    1. computeExpensiveValue(a, b): A function whose result needs to be memoized.
+    2. [a, b]: Dependency array. The function is only recomputed if any value in the array changes.
+    • Without useMemo: The expensive computation would run on every render, even when only the name state changes.
+    • With useMemo: The computation only re-runs when count changes, optimizing performance.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+Difference Between useMemo and useCallback
+Feature	useMemo	useCallback
+Purpose	Memoizes the result of a function (a value).	Memoizes the function itself (its reference).
+Return Type	Returns a value (e.g., number, array, object).	Returns a memoized function.
+Usage	Used for expensive calculations to avoid recalculating on every render.	Used to prevent unnecessary re-creation of functions, which avoids child re-renders.
+Dependencies	Recomputes the value only if the dependencies change.	Recreates the function reference only if the dependencies change.
+Example Use Case	Computing a filtered list, sorting an array, or calculating a derived value from state/props.	Passing stable callback functions to child components (e.g., for onClick, onSubmit).
